@@ -4,35 +4,37 @@
 # étape 1 : obtenir les sources
 
 créer un répertoire de travail, puis :
-
+```
     git clone https://forge.univ-lyon1.fr/p1908367/mmv.git
-
+```
 # étape 2 : installer les dépendances
 
 ## linux
 
 installez les paquets, si nécessaire (pas la peine au nautibus) : `libsdl2-dev, libsdl2-image-dev, libglew-dev` et `premake4`, ou premke5 s'il est disponible.
 par exemple, pour ubuntu et ses variantes :
-
+```
     sudo apt install libsdl2-dev libsdl2-image-dev libglew-dev premake4
-
+```
 # étape 3 : générer les projets
 
 ## windows + visual studio 
 
 pour générer une solution (groupe de projets) visual studio, il suffit de choisir la bonne version :
 
-\code
-./premake5.exe vs2019
+```
+./premake/premake5.exe vs2019
+```
 
 la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`, ouvrez `build/gkit2light.sln`.
 
+S'il y'a des erreurs : Debug -> Release
+
 ## linux + makefile
 
-\code
-premake4 gmake		// si premake4 est installe dans le système
+```
 ./premake/premake5.linux gmake	// si premake5 est copie dans le repertoire de gKit
-\endcode
+```
 
 le `Makefile` se trouve dans le répertoire de base de gKit. 
 
