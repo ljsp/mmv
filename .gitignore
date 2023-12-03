@@ -1,0 +1,14 @@
+bin/*.dll
+bin/*.exe
+bin/*.pdb
+bin
+build
+obj/debug/
+.vs
+.idea
+*.make
+*.cbp
+
+*.workspace
+
+Makefile
