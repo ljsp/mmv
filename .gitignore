@@ -8,6 +8,7 @@ obj/debug/
 .idea
 *.make
 *.cbp
+*.ini
 
 *.workspace
 

@@ -143,22 +143,40 @@ public:
         color= White();
 
         m_repere= make_grid(10);
+#ifdef __linux__
         m_cube = read_mesh("../data/cube.obj");
+#else
+		m_cube = read_mesh("data/cube.obj");
+#endif
         if(m_cube.materials().count() == 0) return -1;
         if(!m_cube.vertex_count()) return -1;
 
         //m_objet= Mesh(GL_TRIANGLES);
         //{ /* ajouter des triplets de sommet == des triangles dans objet... */ }
+        
+#ifdef __linux__
         m_objet = read_mesh("../data/bigguy.obj");
+#else
+		m_objet = read_mesh("data/bigguy.obj");
+#endif
         if(m_objet.materials().count() == 0) return -1;
         if(!m_objet.vertex_count()) return -1;
+        
+#ifdef __linux__
         m_texture = read_texture(0, "../data/monde.jpg");
+#else
+		m_texture = read_texture(0, "data/monde.jpg");
+#endif 
 
         m_groups = m_objet.groups();
 
         m_buffers.create(m_objet);
 
+#ifdef __linux__
         m_program = read_program("../data/shaders/texturesAndToon.glsl");
+#else
+        m_program = read_program("data/shaders/texturesAndToon.glsl");
+#endif 
         program_print_errors(m_program);
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
