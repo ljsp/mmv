@@ -1,10 +1,11 @@
 solution "gKit2light"
     configurations { "debug", "release" }
 
-    includedirs { ".", "src/gKit", "src/imgui" }
+    includedirs { ".", "src/gKit", "src/imgui", "src/mmv" }
     
     gkit_dir = path.getabsolute(".")
     imgui_dir = path.getabsolute(".")
+    mmv_dir = path.getabsolute(".")
     
     configuration "debug"
         targetdir "bin/debug"
@@ -83,7 +84,10 @@ end
         linkoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
     
  -- description des fichiers communs
-gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h", imgui_dir .. "/src/imgui/*.cpp", imgui_dir .. "/src/imgui/*.h"}
+gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h",
+	       imgui_dir .. "/src/imgui/*.cpp", imgui_dir .. "/src/imgui/*.h",
+	       mmv_dir .. "/src/mmv/*.cpp", mmv_dir .. "/src/mmv/*.h"
+	     }
 
 
 -- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true (donc quand gkit2light est utilisé comme une lib),
@@ -105,4 +109,5 @@ for i, name in ipairs(projects) do
         files ( gkit_files )
         files { gkit_dir .. "/projets/" .. name..'.cpp' }
         files { imgui_dir .. "/projets/" .. name..'.cpp' }
+        files { mmv_dir .. "/projets/" .. name..'.cpp' }
 end

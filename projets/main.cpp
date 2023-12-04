@@ -15,6 +15,8 @@
 #include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
 
+#include "HeightField.h"
+
 Mesh make_grid( const int n= 10 )
 {
     Mesh grid= Mesh(GL_LINES);
@@ -151,6 +153,9 @@ public:
         if(m_cube.materials().count() == 0) return -1;
         if(!m_cube.vertex_count()) return -1;
 
+        ScalarField sphere = Sphere(Vector(0.0, 0.0, 0.0), 3.0);
+        sphere.Polygonize(31, m_sphere, Box(1.0));
+
         //m_objet= Mesh(GL_TRIANGLES);
         //{ /* ajouter des triplets de sommet == des triangles dans objet... */ }
         
@@ -192,6 +197,7 @@ public:
         m_repere.release();
         m_objet.release();
         m_cube.release();
+        m_sphere.release();
         release_program(m_program);
         ImGui_ImplSdlGL3_Shutdown();
         ImGui::DestroyContext();
@@ -204,14 +210,16 @@ public:
 
         draw(m_repere, Identity(), camera());
 
-        //glUseProgram(m_program);
-        //program_use_texture(m_program, "texture0", 0, m_texture);
-        //setUniforms();
+        glUseProgram(m_program);
+        program_use_texture(m_program, "texture0", 0, m_texture);
+        setUniforms();
         //m_buffers.draw();
 
         //m_objet.draw(m_program, true, true, true, false, false);
 
-        question6();
+        //question6();
+
+        m_sphere.draw(m_program, true, false, false, false, false);
 
         handleKeys();
 
@@ -341,6 +349,7 @@ protected:
     Mesh m_objet;
     Mesh m_repere;
     Mesh m_cube;
+    Mesh m_sphere;
     Buffers m_buffers;
     std::vector<TriangleGroup> m_groups;
     int location;

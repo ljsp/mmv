@@ -120,6 +120,76 @@ Vector operator/ ( const Vector& v, const float k )
     return kk * v;
 }
 
+bool operator==(const Point& a, const Point& b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+bool operator!=(const Point& a, const Point& b)
+{
+    return !(a == b);
+}
+
+bool operator==(const Vector& a, const Vector& b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+bool operator!=(const Vector& a, const Vector& b)
+{
+    return !(a == b);
+}
+
+bool operator<(const Point& a, const Point& b)
+{
+    return a.x < b.x && a.y < b.y && a.z < b.z;
+}
+
+bool operator>(const Point& a, const Point& b)
+{
+    return a.x > b.x && a.y > b.y && a.z > b.z;
+}
+
+bool operator<=(const Point& a, const Point& b)
+{
+    return a.x <= b.x && a.y <= b.y && a.z <= b.z;
+}
+
+bool operator>=(const Point& a, const Point& b)
+{
+    return a.x >= b.x && a.y >= b.y && a.z >= b.z;
+}
+
+bool operator<(const Vector& a, const Vector& b)
+{
+    return a.x < b.x && a.y < b.y && a.z < b.z;
+}
+
+bool operator>(const Vector& a, const Vector& b)
+{
+    return a.x > b.x && a.y > b.y && a.z > b.z;
+}
+
+bool operator<=(const Vector& a, const Vector& b)
+{
+    return a.x <= b.x && a.y <= b.y && a.z <= b.z;
+}
+
+bool operator>=(const Vector& a, const Vector& b)
+{
+    return a.x >= b.x && a.y >= b.y && a.z >= b.z;
+}
+
+Vector min(const Vector& a, const Vector& b)
+{
+    return Vector(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+}
+
+Vector max(const Vector& a, const Vector& b)
+{
+    return Vector(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+}
+
 Vector normalize( const Vector& v )
 {
     float kk= 1 / length(v);

@@ -125,6 +125,23 @@ Vector operator* ( const Vector& a, const Vector& b );
 //! renvoie le vecteur v/k;
 Vector operator/ ( const Vector& v, const float k );
 
+bool operator==(const Point& a, const Point& b);
+bool operator!=(const Point& a, const Point& b);
+bool operator==(const Vector& a, const Vector& b);
+bool operator!=(const Vector& a, const Vector& b);
+
+bool operator<(const Point& a, const Point& b);
+bool operator>(const Point& a, const Point& b);
+bool operator<=(const Point& a, const Point& b);
+bool operator>=(const Point& a, const Point& b);
+
+bool operator<(const Vector& a, const Vector& b);
+bool operator>(const Vector& a, const Vector& b);
+bool operator<=(const Vector& a, const Vector& b);
+bool operator>=(const Vector& a, const Vector& b);
+
+Vector min(const Vector& a, const Vector& b);
+Vector max(const Vector& a, const Vector& b);
 
 //! vecteur generique, utilitaire.
 struct vec2
