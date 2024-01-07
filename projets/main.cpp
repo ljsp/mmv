@@ -71,9 +71,9 @@ public:
 
         show_demo_window = false;
         lightPosition= Point(0, 10, 10);
-        objetPosition= Point(0, 9, 0);
+        objetTranslation = Point(-100, 0, -100);
         objectRotation = 0;
-        objetScale = 0.1f;
+        objetScale = 0.03f;
         toonLevel= 4;
         color= White();
 
@@ -139,7 +139,12 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //draw(m_repere, Identity(), camera());
-        draw(m_field, Identity() * Scale(0.03) * Translation(-100, 0, -100), camera());
+
+        Transform model= Identity() * Scale(objetScale) *
+                         Translation(Vector(objetTranslation)) *
+                         RotationY(objectRotation);
+
+        draw(m_field, Identity() * model, camera());
 
         glUseProgram(m_program);
         program_use_texture(m_program, "texture0", 0, m_texture);
@@ -158,8 +163,7 @@ public:
     {
         Transform view= camera().view();
         Transform projection= camera().projection();
-        Transform model= Identity() * Scale(objetScale) *
-                         Translation(Vector(objetPosition)) * RotationY(objectRotation);
+        Transform model= Identity() * Scale(objetScale) * RotationY(objectRotation);
         Transform mvp= projection * view * model;
 
         location= glGetUniformLocation(m_program, "mvpMatrix");
@@ -205,25 +209,14 @@ public:
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        ImGui::SeparatorText("Light Position");
-        ImGui::SliderFloat("light x", &lightPosition.x, -10.0f, 10.0f);
-        ImGui::SliderFloat("light y", &lightPosition.y, -10.0f, 10.0f);
-        ImGui::SliderFloat("light z", &lightPosition.z, -10.0f, 10.0f);
-
-        ImGui::SeparatorText("Toon Subdivision");
-        ImGui::SliderInt("Toon Level", &toonLevel, 1, 30, "%d", ImGuiSliderFlags_Logarithmic);
-
-        ImGui::SeparatorText("Model Color");
-        ImGui::ColorEdit3("color", (float*)&color);
-
         ImGui::SeparatorText("Model Position");
-        ImGui::SliderFloat("x", &objetPosition.x, -10.0f, 10.0f);
-        ImGui::SliderFloat("y", &objetPosition.y, -10.0f, 10.0f);
-        ImGui::SliderFloat("z", &objetPosition.z, -10.0f, 10.0f);
+        ImGui::SliderFloat("x", &objetTranslation.x, -1000.0f, 1000.0f);
+        ImGui::SliderFloat("y", &objetTranslation.y, -1000.0f, 1000.0f);
+        ImGui::SliderFloat("z", &objetTranslation.z, -1000.0f, 1000.0f);
         ImGui::SliderFloat("rotation", &objectRotation, -180.0f, 180.0f, "%.3f");
 
         ImGui::SeparatorText("Model Scale");
-        ImGui::SliderFloat("scale", &objetScale, 0.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat("scale", &objetScale, 0.0f, 0.1f, "%.3f");
 
         ImGui::End();
         ImGui::Render();
@@ -245,7 +238,7 @@ protected:
     // Imgui variables
     bool show_demo_window;
     Point lightPosition;
-    Point objetPosition;
+    Point objetTranslation;
     float objectRotation;
     float objetScale;
     int toonLevel;
