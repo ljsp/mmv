@@ -21,16 +21,4 @@ protected:
     double z[]; // Array of heights
 };
 
-class Sphere : public ScalarField{
-
-public:
-    Sphere(const Vector& c, double r) : center(c), radius(r) {}
-    double Value(const Vector& p) const override;
-
-private:
-    Vector center;
-    double radius;
-};
-
-
 #endif //MMV_HEIGHTFIELD_H

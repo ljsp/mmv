@@ -2,12 +2,13 @@
 // Created by lucas on 08/09/23.
 //
 
+
 #include "wavefront.h"
 #include "texture.h"
 
 #include "orbiter.h"
 #include "draw.h"
-#include "app_camera.h"        // classe Application a deriver
+#include "app_camera.h"
 
 #include "program.h"
 #include "uniforms.h"
@@ -16,6 +17,7 @@
 #include "imgui_impl_sdl_gl3.h"
 
 #include "HeightField.h"
+#include "ScalarField.h"
 
 Mesh make_grid( const int n= 10 )
 {
@@ -55,75 +57,6 @@ Mesh make_grid( const int n= 10 )
     return grid;
 }
 
-struct Buffers
-{
-    GLuint vao;
-    GLuint vertex_buffer;
-    int vertex_count;
-
-    Buffers( ) : vao(0), vertex_buffer(0), vertex_count(0) {}
-
-    void create( const Mesh& mesh )
-    {
-        if(!mesh.vertex_buffer_size()) return;
-
-        std::vector<float> data;
-        int vertexSize = mesh.vertex_buffer_size();
-        int texSize = mesh.texcoord_buffer_size();
-        int normalSize = mesh.normal_buffer_size();
-
-        const float* vertexData = mesh.vertex_buffer();
-        const float* texData = mesh.texcoord_buffer();
-        const float* normalData = mesh.normal_buffer();
-
-        for(int i = 0; i < vertexSize/sizeof(float); i++) {
-            data.push_back(vertexData[i]);
-        }
-
-        for(int i = 0; i < texSize/sizeof(float); i++) {
-            data.push_back(texData[i]);
-        }
-
-        for(int i = 0; i < normalSize/sizeof(float); i++) {
-            data.push_back(normalData[i]);
-        }
-
-        int bufferSize = vertexSize + texSize + normalSize;
-
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        glGenBuffers(1, &vertex_buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, bufferSize, data.data(), GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0,3, GL_FLOAT,GL_FALSE,0,0);
-
-        int offset =vertexSize; // 12;
-        glVertexAttribPointer(1,2, GL_FLOAT,GL_FALSE,0,(const void*) offset);
-
-        offset = offset + texSize;
-        glVertexAttribPointer(2,3, GL_FLOAT,GL_FALSE,0,(const void*) offset);
-
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-
-        vertex_count= mesh.vertex_count();
-    }
-
-    void draw () {
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-    }
-
-    void release( )
-    {
-        glDeleteVertexArrays(1, &vao);
-        glDeleteBuffers(1, &vertex_buffer);
-    }
-};
-
 class TP : public AppCamera
 {
 public:
@@ -144,7 +77,12 @@ public:
         toonLevel= 4;
         color= White();
 
+        Image img = read_image("../data/terrain/terrain.png");
+        ScalarField field= ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height() , img.width() , 1);
+        m_field = field.ToMesh();
+
         m_repere= make_grid(10);
+
 #ifdef __linux__
         m_cube = read_mesh("../data/cube.obj");
 #else
@@ -152,12 +90,6 @@ public:
 #endif
         if(m_cube.materials().count() == 0) return -1;
         if(!m_cube.vertex_count()) return -1;
-
-        ScalarField sphere = Sphere(Vector(0.0, 0.0, 0.0), 3.0);
-        sphere.Polygonize(31, m_sphere, Box(1.0));
-
-        //m_objet= Mesh(GL_TRIANGLES);
-        //{ /* ajouter des triplets de sommet == des triangles dans objet... */ }
         
 #ifdef __linux__
         m_objet = read_mesh("../data/bigguy.obj");
@@ -175,8 +107,6 @@ public:
 
         m_groups = m_objet.groups();
 
-        m_buffers.create(m_objet);
-
 #ifdef __linux__
         m_program = read_program("../data/shaders/texturesAndToon.glsl");
 #else
@@ -185,9 +115,9 @@ public:
         program_print_errors(m_program);
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
-        glClearDepth(1.f);                                  // profondeur par defaut
-        glDepthFunc(GL_LESS);                                // ztest, conserver l'intersection la plus proche de la camera
-        glEnable(GL_DEPTH_TEST);                             // activer le ztest
+        glClearDepth(1.f);                                   // profondeur par defaut
+        glDepthFunc(GL_LESS);                                 // ztest, conserver l'intersection la plus proche de la camera
+        glEnable(GL_DEPTH_TEST);                              // activer le ztest
 
         return 0;
     }
@@ -208,60 +138,20 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        draw(m_repere, Identity(), camera());
+        //draw(m_repere, Identity(), camera());
+        draw(m_field, Identity() * Scale(0.03) * Translation(-100, 0, -100), camera());
 
         glUseProgram(m_program);
         program_use_texture(m_program, "texture0", 0, m_texture);
         setUniforms();
-        //m_buffers.draw();
 
-        //m_objet.draw(m_program, true, true, true, false, false);
-
-        //question6();
-
-        m_sphere.draw(m_program, true, false, false, false, false);
+        //m_sphere.draw(m_program, true, false, false, false, false);
 
         handleKeys();
 
         imguiWindow();
 
         return 1;
-    }
-
-    void question6()
-    {
-        const Materials& materials= m_objet.materials();
-
-        for(unsigned i= 0; i < m_groups.size(); i++)
-        {
-            const TriangleGroup& group= m_groups[i];
-
-            glUseProgram(m_program);
-            {
-                Transform view= camera().view();
-                Transform projection= camera().projection();
-                Transform model= Identity() * Scale(objetScale) *
-                                 Translation(Vector(objetPosition)) * RotationY(objectRotation);
-                Transform mvp= projection * view * model;
-
-                Color color = materials.materials.at(group.index).diffuse;
-
-                location= glGetUniformLocation(m_program, "mvpMatrix");
-                glUniformMatrix4fv(location, 1, GL_TRUE, mvp.data());
-
-                location= glGetUniformLocation(m_program, "lightPosition");
-                glUniform3f(location, lightPosition.x, lightPosition.y, lightPosition.z);
-
-                location= glGetUniformLocation(m_program, "diffuse");
-                glUniform4f(location, color.r, color.g, color.b, color.a);
-
-                location= glGetUniformLocation(m_program, "toonLevel");
-                glUniform1i(location, toonLevel);
-
-                glBindVertexArray(m_buffers.vao);
-                glDrawArrays(GL_TRIANGLES, group.first, group.n);
-            }
-        }
     }
 
     void setUniforms()
@@ -271,8 +161,6 @@ public:
         Transform model= Identity() * Scale(objetScale) *
                          Translation(Vector(objetPosition)) * RotationY(objectRotation);
         Transform mvp= projection * view * model;
-
-        //Color color = materials.materials.at(group.index).diffuse;
 
         location= glGetUniformLocation(m_program, "mvpMatrix");
         glUniformMatrix4fv(location, 1, GL_TRUE, mvp.data());
@@ -305,7 +193,6 @@ public:
 
     void imguiWindow( )
     {
-
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         ImGui_ImplSdlGL3_NewFrame(m_window);
         ImGui::NewFrame();
@@ -314,6 +201,7 @@ public:
         ImGui::Text("Application average %.1f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::Spacing();
         ImGui::Checkbox("Demo Window", &show_demo_window);
+
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
@@ -350,7 +238,7 @@ protected:
     Mesh m_repere;
     Mesh m_cube;
     Mesh m_sphere;
-    Buffers m_buffers;
+    Mesh m_field;
     std::vector<TriangleGroup> m_groups;
     int location;
 

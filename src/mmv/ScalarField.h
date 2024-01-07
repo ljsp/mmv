@@ -7,29 +7,29 @@
 
 #include "vec.h"
 #include "mesh.h"
-#include "Box.h"
+#include "Grid.h"
+#include "image.h"
 
-class ScalarField {
+
+class ScalarField : public Grid {
 public:
-    ScalarField();
+    ScalarField(const Image & img, const vec2& c1, const vec2& c2, int rows, int cols, float e);
     ~ScalarField();
+
+
+    Vector Gradient(int x, int y) const;
+    float Height(int x, int y) const;
+    void Slope(ScalarField& s);
+    void Laplacian(ScalarField& s);
+    void Drainage(ScalarField& s);
 
     void ExportImage(const char* filename);
     void ExportMesh(const char* filename);
+    Mesh ToMesh() const;
 
-    virtual double Value(const Vector&) const;
-    virtual Vector Gradient(const Vector&) const;
-    void Slope(ScalarField* s);
-    void Laplacian(ScalarField* s);
-    void Drainage(ScalarField* s);
-    virtual Vector Normal(const Vector&) const;
-    Vector Dichotomy(Vector, Vector, double, double, double, const double& = 1.0e-4) const;
-    virtual void Polygonize(int, Mesh&, const Box&, const double& = 1e-4) const;
-
-protected:
-    static const double Epsilon;       //!< Epsilon value for partial derivatives
-    static int TriangleTable[256][16]; //!< Two dimensionnal array storing the straddling edges for every marching cubes configuration.
-    static int edgeTable[256];         //!< Array storing straddling edges for every marching cubes configuration.
+private:
+    std::vector<float> heights;
+    std::vector<std::vector<Vector>> gradient;
 };
 
 #endif //MMV_SCALARFIELD_H

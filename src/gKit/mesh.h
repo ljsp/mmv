@@ -364,17 +364,17 @@ public:
     void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     //! dessine une partie de l'objet avec un shader program.
     void draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
-    
+
 private:
     //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
-    
+
     //
     std::vector<vec3> m_positions;
     std::vector<vec2> m_texcoords;
     std::vector<vec3> m_normals;
     std::vector<vec4> m_colors;
-    
+
     std::vector<unsigned int> m_indices;
 
     Materials m_materials;

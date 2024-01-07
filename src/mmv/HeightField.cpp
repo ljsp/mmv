@@ -32,7 +32,3 @@ double HeightField::Height(const double& x, const double& y)
     }
     */
 }
-
-double Sphere::Value(const Vector &p) const {
-    return length2(p - center) - radius;
-}
