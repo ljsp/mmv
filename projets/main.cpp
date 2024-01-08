@@ -77,7 +77,11 @@ public:
         toonLevel= 4;
         color= White();
 
+#ifdef __linux__
         Image img = read_image("../data/terrain/terrain.png");
+#else
+        Image img = read_image("data/terrain/terrain.png");
+#endif
         ScalarField field= ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height() , img.width() , 1);
         m_field = field.ToMesh();
 
