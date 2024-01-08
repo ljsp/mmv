@@ -49,6 +49,10 @@ public:
         ScalarField field= ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
         m_field = field.ToMesh();
 
+        Image gradient = field.GradientNorm(field);
+        write_image(gradient, "gradient.png");
+        m_gradient_texture = read_texture(0, "gradient.png");
+
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
         glClearDepth(1.f);                    // profondeur par defaut
         glDepthFunc(GL_LESS);                 // ztest, conserver l'intersection la plus proche de la camera
@@ -111,6 +115,20 @@ public:
         ImGui::SeparatorText("Model Scale");
         ImGui::SliderFloat("scale", &objetScale, 0.0f, 0.05f, "%.3f");
 
+        ImGui::SeparatorText("Textures");
+
+        if (ImGui::CollapsingHeader("Basic"))
+        {
+            ImVec2 texture_size(300, 300);
+            ImGui::Image((void*)(intptr_t)m_texture, texture_size);
+        }
+
+        if (ImGui::CollapsingHeader("Gradient"))
+        {
+            ImVec2 texture_size(300, 300);
+            ImGui::Image((void*)(intptr_t)m_gradient_texture, texture_size);
+        }
+
         ImGui::End();
         ImGui::Render();
         ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
@@ -119,6 +137,7 @@ public:
 protected:
     GLuint m_program;
     GLuint m_texture;
+    GLuint m_gradient_texture;
     Mesh m_field;
 
     // Imgui variables

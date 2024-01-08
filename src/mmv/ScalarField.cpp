@@ -34,16 +34,21 @@ Vector ScalarField::Gradient(int x, int y) const {
     return Vector(gx, gy, gz);
 }
 
-void ScalarField::GradientNorm(ScalarField &s) {
-    int rows = getRows();
-    int cols = getCols();
+Image ScalarField::GradientNorm(ScalarField &s) {
+    Image img = Image(s.getRows(), s.getCols());
+    int rows = s.getRows();
+    int cols = s.getCols();
 
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
-            Vector g = Gradient(x, y);
-            s.heights[Index(x, y)] = length(g);
+            Vector v = s.Gradient(x, y);
+            float color = length(v);
+            //float color = (v.x + v.y + v .z) / 3.0f;
+            img(x, y) = Color(color,color,color);
         }
     }
+
+    return img;
 }
 
 void ScalarField::Slope(ScalarField &s) {

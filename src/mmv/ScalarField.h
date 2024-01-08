@@ -19,7 +19,7 @@ public:
 
     Vector Gradient(int x, int y) const;
     float Height(int x, int y) const;
-    void GradientNorm(ScalarField& s);
+    Image GradientNorm(ScalarField& s);
     void Slope(ScalarField& s);
     void Laplacian(ScalarField& s);
     void Drainage(ScalarField& s);
