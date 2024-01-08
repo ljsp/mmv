@@ -74,10 +74,9 @@ public:
         objetTranslation = Point(-100, 0, -100);
         objectRotation = 0;
         objetScale = 0.03f;
-        toonLevel= 4;
         color= White();
 
-        Image img = read_image("../data/terrain/terrain.png");
+        Image img = read_image("../data/terrain/terrain_texture.png");
         ScalarField field= ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height() , img.width() , 1);
         m_field = field.ToMesh();
 
@@ -100,7 +99,7 @@ public:
         if(!m_objet.vertex_count()) return -1;
         
 #ifdef __linux__
-        m_texture = read_texture(0, "../data/monde.jpg");
+        m_texture = read_texture(0, "../data/terrain/terrain_texture.png");
 #else
 		m_texture = read_texture(0, "data/monde.jpg");
 #endif 
@@ -108,16 +107,16 @@ public:
         m_groups = m_objet.groups();
 
 #ifdef __linux__
-        m_program = read_program("../data/shaders/texturesAndToon.glsl");
+        m_program = read_program("../data/shaders/textures.glsl");
 #else
         m_program = read_program("data/shaders/texturesAndToon.glsl");
 #endif 
         program_print_errors(m_program);
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
-        glClearDepth(1.f);                                   // profondeur par defaut
-        glDepthFunc(GL_LESS);                                 // ztest, conserver l'intersection la plus proche de la camera
-        glEnable(GL_DEPTH_TEST);                              // activer le ztest
+        glClearDepth(1.f);                    // profondeur par defaut
+        glDepthFunc(GL_LESS);                 // ztest, conserver l'intersection la plus proche de la camera
+        glEnable(GL_DEPTH_TEST);              // activer le ztest
 
         return 0;
     }
@@ -137,46 +136,25 @@ public:
     int render( )
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        //draw(m_repere, Identity(), camera());
+        glUseProgram(m_program);
 
         Transform model= Identity() * Scale(objetScale) *
                          Translation(Vector(objetTranslation)) *
                          RotationY(objectRotation);
+        Transform view= camera().view();
+        Transform projection= camera().projection();
+        Transform mvp = projection * view * model;
 
-        draw(m_field, Identity() * model, camera());
-
-        glUseProgram(m_program);
+        program_uniform(m_program, "mvpMatrix", mvp);
         program_use_texture(m_program, "texture0", 0, m_texture);
-        setUniforms();
 
-        //m_sphere.draw(m_program, true, false, false, false, false);
+        m_field.draw(m_program, true, true, false, false, false);
 
         handleKeys();
 
         imguiWindow();
 
         return 1;
-    }
-
-    void setUniforms()
-    {
-        Transform view= camera().view();
-        Transform projection= camera().projection();
-        Transform model= Identity() * Scale(objetScale) * RotationY(objectRotation);
-        Transform mvp= projection * view * model;
-
-        location= glGetUniformLocation(m_program, "mvpMatrix");
-        glUniformMatrix4fv(location, 1, GL_TRUE, mvp.data());
-
-        location= glGetUniformLocation(m_program, "lightPosition");
-        glUniform3f(location, lightPosition.x, lightPosition.y, lightPosition.z);
-
-        location= glGetUniformLocation(m_program, "diffuse");
-        glUniform4f(location, color.r, color.g, color.b, color.a);
-
-        location= glGetUniformLocation(m_program, "toonLevel");
-        glUniform1i(location, toonLevel);
     }
 
     void handleKeys( )
@@ -241,7 +219,6 @@ protected:
     Point objetTranslation;
     float objectRotation;
     float objetScale;
-    int toonLevel;
     Color color;
 };
 

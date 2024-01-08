@@ -19,6 +19,7 @@ public:
 
     Vector Gradient(int x, int y) const;
     float Height(int x, int y) const;
+    void GradientNorm(ScalarField& s);
     void Slope(ScalarField& s);
     void Laplacian(ScalarField& s);
     void Drainage(ScalarField& s);
@@ -29,7 +30,7 @@ public:
 
 private:
     std::vector<float> heights;
-    std::vector<std::vector<Vector>> gradient;
+    std::vector<float> gradient;
 };
 
 #endif //MMV_SCALARFIELD_H

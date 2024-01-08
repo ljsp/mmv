@@ -15,10 +15,16 @@ public:
     double Height(const double&,const double&);
     double HeightGrid(int,int);
 
+    // Tester si un rayon intersecte le terrain
+    // Utilisé pour l'accessibilité
+    // bool Intersect(const Ray& ray, double& t, double&, Vector&) const;
+
+
+    // Shere tracing
+    // constante de lipchitz = sqrt( 1 + plus grande valeur des pentes)
+
 protected:
     Vector a, b; // Bounding box
-    int nx, ny; // Discretization
-    double z[]; // Array of heights
 };
 
 #endif //MMV_HEIGHTFIELD_H
