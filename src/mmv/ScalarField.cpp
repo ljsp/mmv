@@ -23,13 +23,9 @@ float ScalarField::Height(int x, int y) const {
 }
 
 Vector ScalarField::Gradient(int x, int y) const {
-    double gx = Height(x+1, y) - Height(x-1, y);
-    double gy = Height(x, y+1) - Height(x, y-1);
-    double gz = 0.;
-
-    if(gx == 0 && gy == 0){
-        gz = 1.;
-    }
+    double gx = (Height(x+1, y) - Height(x-1, y)) / 2.0f;
+    double gy = (Height(x, y+1) - Height(x, y-1)) / 2.0f;
+    double gz = 0.0f;
 
     return Vector(gx, gy, gz);
 }
@@ -43,13 +39,38 @@ Image ScalarField::GradientNorm(ScalarField &s) {
         for(int y = 0; y < cols; y++){
             Vector v = s.Gradient(x, y);
             float color = length(v);
-            //float color = (v.x + v.y + v .z) / 3.0f;
             img(x, y) = Color(color,color,color);
         }
     }
 
     return img;
 }
+
+float ScalarField::Laplacian(int x, int y) {
+    float center = Height(x, y);
+    float lx = Height(x - 1, y) + Height(x + 1, y);
+    float ly = Height(x, y - 1) + Height(x, y + 1);
+
+    float laplacian = (lx + ly - 4 * center);
+    return laplacian;
+}
+
+Image ScalarField::LaplacianImage(ScalarField &s) {
+    Image img = Image(s.getRows(), s.getCols());
+    int rows = s.getRows();
+    int cols = s.getCols();
+
+    for(int x = 0; x < rows; x++){
+        for(int y = 0; y < cols; y++){
+            float laplacian = s.Laplacian(x, y);
+            float color = laplacian;
+            img(x, y) = Color(color,color,color);
+        }
+    }
+
+    return img;
+}
+
 
 void ScalarField::Slope(ScalarField &s) {
 

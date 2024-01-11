@@ -33,6 +33,7 @@ public:
         objetPosition = Point(-100, 0, -100);
         objectRotation = 0;
         objetScale = 0.03f;
+        textureId = 0;
         color= White();
 
 #ifdef __linux__
@@ -46,12 +47,16 @@ public:
 #endif
         program_print_errors(m_program);
 
-        ScalarField field= ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
+        ScalarField field = ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
         m_field = field.ToMesh();
 
         Image gradient = field.GradientNorm(field);
         write_image(gradient, "gradient.png");
         m_gradient_texture = read_texture(0, "gradient.png");
+
+        Image laplacian = field.LaplacianImage(field);
+        write_image(laplacian, "laplacian.png");
+        m_laplacian_texture = read_texture(0, "laplacian.png");
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
         glClearDepth(1.f);                    // profondeur par defaut
@@ -83,7 +88,13 @@ public:
         Transform mvp = projection * view * model;
 
         program_uniform(m_program, "mvpMatrix", mvp);
-        program_use_texture(m_program, "texture0", 0, m_texture);
+        if(textureId == 0) {
+            program_use_texture(m_program, "texture0", 0, m_texture);
+        } else if(textureId == 1){
+            program_use_texture(m_program, "texture0", 0, m_gradient_texture);
+        } else {
+            program_use_texture(m_program, "texture0", 0, m_laplacian_texture);
+        }
 
         m_field.draw(m_program, true, true, true, false, false);
 
@@ -97,7 +108,7 @@ public:
         ImGui_ImplSdlGL3_NewFrame(m_window);
         ImGui::NewFrame();
 
-        ImGui::Begin("Settings", nullptr);
+        ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
         ImGui::Text("Application average %.1f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::Spacing();
         ImGui::Checkbox("Demo Window", &show_demo_window);
@@ -117,6 +128,10 @@ public:
 
         ImGui::SeparatorText("Textures");
 
+        ImGui::RadioButton("Basic", &textureId, 0); ImGui::SameLine();
+        ImGui::RadioButton("Gradient", &textureId, 1); ImGui::SameLine();
+        ImGui::RadioButton("Laplacian", &textureId, 2);
+
         if (ImGui::CollapsingHeader("Basic"))
         {
             ImVec2 texture_size(300, 300);
@@ -129,6 +144,12 @@ public:
             ImGui::Image((void*)(intptr_t)m_gradient_texture, texture_size);
         }
 
+        if (ImGui::CollapsingHeader("Laplacian"))
+        {
+            ImVec2 texture_size(300, 300);
+            ImGui::Image((void*)(intptr_t)m_laplacian_texture, texture_size);
+        }
+
         ImGui::End();
         ImGui::Render();
         ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
@@ -138,6 +159,7 @@ protected:
     GLuint m_program;
     GLuint m_texture;
     GLuint m_gradient_texture;
+    GLint m_laplacian_texture;
     Mesh m_field;
 
     // Imgui variables
@@ -145,6 +167,7 @@ protected:
     Point objetPosition;
     float objectRotation;
     float objetScale;
+    int textureId;
     Color color;
 };
 

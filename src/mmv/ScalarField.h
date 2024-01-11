@@ -17,11 +17,12 @@ public:
     ~ScalarField();
 
 
-    Vector Gradient(int x, int y) const;
     float Height(int x, int y) const;
+    Vector Gradient(int x, int y) const;
     Image GradientNorm(ScalarField& s);
     void Slope(ScalarField& s);
-    void Laplacian(ScalarField& s);
+    float Laplacian(int x, int y);
+    Image LaplacianImage(ScalarField& s);
     void Drainage(ScalarField& s);
 
     void ExportImage(const char* filename);
