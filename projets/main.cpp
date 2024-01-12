@@ -31,7 +31,6 @@ public:
 
         show_demo_window = false;
         objetPosition = Point(-100, 0, -100);
-        objectRotation = 0;
         objetScale = 0.03f;
         textureId = 0;
         color= White();
@@ -82,12 +81,12 @@ public:
         Transform projection= camera().projection();
         Transform model= Identity()
                         * Scale(objetScale)
-                        * Translation(Vector(objetPosition))
-                        * RotationY(objectRotation);
+                        * Translation(Vector(objetPosition));
 
         Transform mvp = projection * view * model;
 
         program_uniform(m_program, "mvpMatrix", mvp);
+
         if(textureId == 0) {
             program_use_texture(m_program, "texture0", 0, m_texture);
         } else if(textureId == 1){
@@ -117,11 +116,15 @@ public:
             ImGui::ShowDemoWindow(&show_demo_window);
         }
 
+        ImGui::SeparatorText("Model Stats");
+        ImGui::Text("Vertices: %d", m_field.vertex_count()); ImGui::SameLine();
+        ImGui::Text("Triangles: %d", m_field.triangle_count());
+        ImGui::Text("Texture: %d", textureId);
+
         ImGui::SeparatorText("Model Position");
         ImGui::SliderFloat("x", &objetPosition.x, -1000.0f, 1000.0f);
         ImGui::SliderFloat("y", &objetPosition.y, -1000.0f, 1000.0f);
         ImGui::SliderFloat("z", &objetPosition.z, -1000.0f, 1000.0f);
-        ImGui::SliderFloat("rotation", &objectRotation, -180.0f, 180.0f, "%.3f");
 
         ImGui::SeparatorText("Model Scale");
         ImGui::SliderFloat("scale", &objetScale, 0.0f, 0.05f, "%.3f");
@@ -159,13 +162,12 @@ protected:
     GLuint m_program;
     GLuint m_texture;
     GLuint m_gradient_texture;
-    GLint m_laplacian_texture;
+    GLuint m_laplacian_texture;
     Mesh m_field;
 
     // Imgui variables
     bool show_demo_window;
     Point objetPosition;
-    float objectRotation;
     float objetScale;
     int textureId;
     Color color;
