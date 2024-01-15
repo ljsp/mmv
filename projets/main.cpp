@@ -50,7 +50,11 @@ public:
         m_field = field.ToMesh();
 
         Image gradient = field.GradientNorm(field);
+        Image gradientS = gradient.smooth();
+        Image gradientB = gradient.Blur();
         write_image(gradient, "gradient.png");
+        write_image(gradientS, "gradientS.png");
+        write_image(gradientB, "gradientB.png");
         m_gradient_texture = read_texture(0, "gradient.png");
 
         Image laplacian = field.LaplacianImage(field);

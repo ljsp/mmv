@@ -135,6 +135,50 @@ public:
         // renvoie vrai si im ou l'objet est la sentinelle
         return (this == &im);
     }
+
+    Image smooth() const
+    {
+		Image result(m_width, m_height);
+        for (int y = 1; y < m_height - 1; y++)
+        {
+            for (int x = 1; x < m_width - 1; x++)
+            {
+                Color c = (*this)(x, y); //current
+                Color c1 = (*this)(x - 1, y);  //
+                Color c2 = (*this)(x + 1, y);
+                Color c3 = (*this)(x, y - 1);
+                Color c4 = (*this)(x, y + 1);
+                Color c5 = (*this)(x - 1, y - 1);
+                Color c6 = (*this)(x + 1, y - 1);
+                Color c7 = (*this)(x - 1, y + 1);
+                Color c8 = (*this)(x + 1, y + 1);
+                result(x, y) = (c * 4 + c1 * 2 + c2 * 2 + c3 * 2 + c4 * 2 + c5 + c6 + c7 + c8) / 16.0f;
+			}
+		}
+		return result;
+	}   
+
+    Image Blur() const
+    {
+		Image result(m_width, m_height);
+        for (int y = 1; y < m_height - 1; y++)
+        {
+            for (int x = 1; x < m_width - 1; x++)
+            {
+				Color c= (*this)(x, y); //current
+				Color c1= (*this)(x-1, y);  //
+				Color c2= (*this)(x+1, y);
+				Color c3= (*this)(x, y-1);
+				Color c4= (*this)(x, y+1);
+                Color c5 = (*this)(x - 1, y - 1);
+                Color c6 = (*this)(x + 1, y - 1);
+                Color c7 = (*this)(x - 1, y + 1);
+                Color c8 = (*this)(x + 1, y + 1);
+				result(x, y)= (c + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8) / 9.0f;
+			}
+		}
+		return result;
+	}
 };
 
 ///@}
