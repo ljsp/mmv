@@ -84,36 +84,36 @@ Mesh ScalarField::ToMesh() const {
 
     for(int x = 0; x < rows - 1; x++) {
         for(int y = 0; y < cols - 1; y++) {
-            float texX  = x         / static_cast<float>(rows - 1);
-            float texY  = y         / static_cast<float>(cols - 1);
-            float texX1 = (x + 1)   / static_cast<float>(rows - 1);
-            float texY1 = (y + 1)   / static_cast<float>(cols - 1);
+            float texX  = (float)x         / static_cast<float>(rows);
+            float texY  = (float)y         / static_cast<float>(cols);
+            float texX1 = (float)(x + 1)   / static_cast<float>(rows);
+            float texY1 = (float)(y + 1)   / static_cast<float>(cols);
 
             // First Triangle
-            mesh.vertex(Point(x, Height(x, y), y));
-            mesh.normal(Gradient(x, y));
             mesh.texcoord(texX, texY);
+            mesh.normal(Gradient(x, y));
+            mesh.vertex(Point(x, Height(x, y), y));
 
-            mesh.vertex(Point(x, Height(x, y + 1), y + 1));
-            mesh.normal(Gradient(x, y + 1));
             mesh.texcoord(texX, texY1);
+            mesh.normal(Gradient(x, y + 1));
+            mesh.vertex(Point(x, Height(x, y + 1), y + 1));
 
-            mesh.vertex(Point(x + 1, Height(x + 1, y), y));
-            mesh.normal(Gradient(x + 1, y));
             mesh.texcoord(texX1, texY);
+            mesh.normal(Gradient(x + 1, y));
+            mesh.vertex(Point(x + 1, Height(x + 1, y), y));
 
             // Second Triangle
-            mesh.vertex(Point(x + 1, Height(x + 1, y), y));
-            mesh.normal(Gradient(x + 1, y));
             mesh.texcoord(texX1, texY);
+            mesh.normal(Gradient(x + 1, y));
+            mesh.vertex(Point(x + 1, Height(x + 1, y), y));
 
-            mesh.vertex(Point(x, Height(x, y + 1), y + 1));
-            mesh.normal(Gradient(x, y + 1));
             mesh.texcoord(texX, texY1);
+            mesh.normal(Gradient(x, y + 1));
+            mesh.vertex(Point(x, Height(x, y + 1), y + 1));
 
-            mesh.vertex(Point(x + 1, Height(x + 1, y + 1), y + 1));
-            mesh.normal(Gradient(x + 1, y + 1));
             mesh.texcoord(texX1, texY1);
+            mesh.normal(Gradient(x + 1, y + 1));
+            mesh.vertex(Point(x + 1, Height(x + 1, y + 1), y + 1));
         }
     }
     mesh.vertex(Point(0, 0, 0));
