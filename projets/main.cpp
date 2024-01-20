@@ -55,11 +55,20 @@ public:
         write_image(gradient, "gradient.png");
         write_image(gradientS, "gradientS.png");
         write_image(gradientB, "gradientB.png");
-        m_gradient_texture = read_texture(0, "gradient.png");
+        m_gradient_texture = read_texture(0, "gradientS.png");
 
         Image laplacian = field.LaplacianImage(field);
         write_image(laplacian, "laplacian.png");
         m_laplacian_texture = read_texture(0, "laplacian.png");
+
+        Image accesibility = field.AccesibilityImage(field);
+        write_image(accesibility, "accesibility.png");
+        m_accesibility_texture = read_texture(0, "accesibility.png");
+
+        Image averageSlope = field.AverageSlopeImage(field);
+        write_image(averageSlope, "averageSlope.png");
+        m_averageSlope_texture = read_texture(0, "averageSlope.png");
+
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
         glClearDepth(1.f);                    // profondeur par defaut
@@ -95,8 +104,12 @@ public:
             program_use_texture(m_program, "texture0", 0, m_texture);
         } else if(textureId == 1){
             program_use_texture(m_program, "texture0", 0, m_gradient_texture);
-        } else {
+        } else if (textureId == 2) {
             program_use_texture(m_program, "texture0", 0, m_laplacian_texture);
+        } else if (textureId == 3) {
+			program_use_texture(m_program, "texture0", 0, m_accesibility_texture);
+        } else if (textureId == 4) {
+            program_use_texture(m_program, "texture0", 0, m_averageSlope_texture);
         }
 
         m_field.draw(m_program, true, true, true, false, false);
@@ -137,7 +150,9 @@ public:
 
         ImGui::RadioButton("Basic", &textureId, 0); ImGui::SameLine();
         ImGui::RadioButton("Gradient", &textureId, 1); ImGui::SameLine();
-        ImGui::RadioButton("Laplacian", &textureId, 2);
+        ImGui::RadioButton("Laplacian", &textureId, 2); 
+        ImGui::RadioButton("Accesibility", &textureId, 3); ImGui::SameLine();
+        ImGui::RadioButton("Average Slope", &textureId, 4);
 
         if (ImGui::CollapsingHeader("Basic"))
         {
@@ -157,6 +172,18 @@ public:
             ImGui::Image((void*)(intptr_t)m_laplacian_texture, texture_size);
         }
 
+        if (ImGui::CollapsingHeader("Accesibility"))
+        {
+            ImVec2 texture_size(300, 300);
+            ImGui::Image((void*)(intptr_t)m_accesibility_texture, texture_size);
+        }
+
+        if (ImGui::CollapsingHeader("averageSlope"))
+        {
+            ImVec2 texture_size(300, 300);
+            ImGui::Image((void*)(intptr_t)m_averageSlope_texture, texture_size);
+        }
+
         ImGui::End();
         ImGui::Render();
         ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
@@ -167,6 +194,8 @@ protected:
     GLuint m_texture;
     GLuint m_gradient_texture;
     GLuint m_laplacian_texture;
+    GLuint m_accesibility_texture;
+    GLuint m_averageSlope_texture;
     Mesh m_field;
 
     // Imgui variables

@@ -16,6 +16,34 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
             heights[Index(x, y)] = ((c.r + c.g + c.b)/(3*e)) * heightModifier;
         }
     }
+
+    // Calculer les gradients.
+    gradient.resize(rows * cols);
+    for (int x = 1; x < rows; x++) {
+        for (int y = 1; y < cols; y++) {
+            double gx = (Height(x + 1, y) - Height(x - 1, y)) / 2.0f;
+            double gy = (Height(x, y + 1) - Height(x, y - 1)) / 2.0f;
+            double gz = 0.0f;
+            gradient[Index(x, y)] = Vector(gx, gy, gz);
+		}
+	}
+
+    // Calculer les pentes.
+	slope.resize(rows * cols);
+    for (int x = 1; x < rows; x++) {
+        for (int y = 1; y < cols; y++) {
+            Vector gradient00 = Gradient(x, y - 1);
+            Vector gradient01 = Gradient(x, y + 1);
+            Vector gradient10 = Gradient(x + 1, y);
+            Vector gradient11 = Gradient(x - 1, y);
+
+            // Calculer la moyenne des gradients pour le point central du quadrilatère.
+            Vector averageGradient = (gradient00 + gradient01 + gradient10 + gradient11) / 4.0;
+
+            // Calculer la pente (magnitude du gradient moyen).
+            slope[Index(x, y)] = length(averageGradient);
+		}
+	}
 }
 
 float ScalarField::Height(int x, int y) const {
@@ -23,11 +51,11 @@ float ScalarField::Height(int x, int y) const {
 }
 
 Vector ScalarField::Gradient(int x, int y) const {
-    double gx = (Height(x+1, y) - Height(x-1, y)) / 2.0f;
-    double gy = (Height(x, y+1) - Height(x, y-1)) / 2.0f;
-    double gz = 0.0f;
+    return gradient[Index(x, y)];
+}
 
-    return Vector(gx, gy, gz);
+float ScalarField::Slope(float x, float y) const{
+    return slope[Index(x, y)];
 }
 
 Image ScalarField::GradientNorm(ScalarField &s) {
@@ -42,7 +70,6 @@ Image ScalarField::GradientNorm(ScalarField &s) {
             img(x, y) = Color(color,color,color);
         }
     }
-
     return img;
 }
 
@@ -72,9 +99,7 @@ Image ScalarField::LaplacianImage(ScalarField &s) {
 }
 
 
-void ScalarField::Slope(ScalarField &s) {
 
-}
 
 Mesh ScalarField::ToMesh() const {
     Mesh mesh = Mesh(GL_TRIANGLES);
@@ -127,4 +152,152 @@ Mesh ScalarField::ToMesh() const {
 
 ScalarField::~ScalarField() {
 
+}
+
+float ScalarField::AccessibilityBox(float xCurrent, float yCurrent) {
+    float step = 0.1f;
+    int rayon = 2;
+
+    float zCurrent = Height(xCurrent, yCurrent);
+
+    int rows = getRows();
+    int cols = getCols();
+
+    float total = 0;
+    float superieur = 0;
+    for (float x = xCurrent - rayon; x < xCurrent + rayon; x += step) {
+        if (x >= 0 && x <= rows) {
+            for (float y = yCurrent - rayon; y < yCurrent + rayon; y += step) {
+                if (y >= 0 && y <= cols) {
+                    float hauteur = Height(x, y);
+                    for (float z = zCurrent - rayon; z < zCurrent + rayon; z += step) {
+                        if (z > hauteur) {
+                            superieur++;
+                        }
+                        total++;
+                    }
+                }
+            }
+        }
+    }
+    return superieur / total;
+}
+
+struct Ray
+{
+    Point o;                // origine
+    Vector d;               // direction
+    float tmax;             // position de l'extremite, si elle existe. le rayon est un intervalle [0 tmax]
+
+    // le rayon est un segment, on connait origine et extremite, et tmax= 1
+    Ray(const Point& origine, const Point& extremite) : o(origine), d(Vector(origine, extremite)), tmax(1) {}
+
+    // le rayon est une demi droite, on connait origine et direction, et tmax= \inf
+    Ray(const Point& origine, const Vector& direction) : o(origine), d(direction), tmax(FLT_MAX) {}
+
+    // renvoie le point sur le rayon pour t
+    Point point(const float t) const { return o + t * d; }
+};
+
+float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
+    float radius = 2;
+    float epsilon = 0.1;
+    float tmax = radius;
+    float zCurrent = Height(xCurrent, yCurrent);
+    float step = epsilon;
+
+    int numRays = 0;
+    int numHits = 0;
+
+    for (float theta = 0.0f; theta <= M_PI / 2.0f; theta += step) {
+        for (float phi = 0.0f; phi <= 2.0f * M_PI; phi += step) {
+            // Définir la direction du rayon dans la demi-sphère.
+            float dx = radius * sin(theta) * cos(phi);
+            float dy = radius * sin(theta) * sin(phi);
+            float dz = radius * cos(theta);
+
+            // Créer le rayon.
+            Ray ray(Point(xCurrent, yCurrent, zCurrent), Vector(dx, dy, dz));
+
+            // Initialiser les variables pour suivre l'avancement du rayon.
+            float t = 0.0f;
+            bool hitTerrain = false;
+
+            // Parcourir le rayon jusqu'à tmax.
+            while (t < tmax) {
+                // Obtenir la position actuelle du rayon.
+                Point currentPosition = ray.point(t);
+
+                // Vérifier si le rayon touche le terrain.
+                if (currentPosition.z < Height(currentPosition.x, currentPosition.y)) {
+                    hitTerrain = true;
+                    break;
+                }
+
+                // Avancer le rayon de epsilon.
+                t += epsilon;
+            }
+
+            // Incrémenter le nombre total de rayons.
+            numRays++;
+
+            // Si le rayon a touché le terrain, ne rien faire.
+            // Sinon, incrémente le nombre de hits.
+            if (!hitTerrain) {
+                numHits++;
+            }
+        }
+    }
+
+    // Calculer l'accessibilité comme le ratio des rayons n'ayant pas touché le terrain.
+    float accessibility = static_cast<float>(numHits) / static_cast<float>(numRays);
+
+    return accessibility;
+}
+
+Image ScalarField::AccesibilityImage(ScalarField& s) {
+    Image img = Image(s.getRows(), s.getCols());
+    int rows = s.getRows();
+    int cols = s.getCols();
+
+    for (int x = 0; x < rows; x++) {
+        for (int y = 0; y < cols; y++) {
+            float acces = s.AccessibilityRay(x, y);  
+            img(x, y) = Color(acces, acces, acces);
+        }
+    }
+
+    return img;
+}
+
+float ScalarField::AverageSlope(int x, int y) {
+    // pente des 8 direction autour du point
+    float voisin1 = Slope(x - 1, y - 1);
+    float voisin2 = Slope(x, y - 1);
+    float voisin3 = Slope(x + 1, y - 1);
+    float voisin4 = Slope(x - 1, y);
+    float voisin5 = Slope(x + 1, y);
+    float voisin6 = Slope(x - 1, y + 1);
+    float voisin7 = Slope(x, y + 1);
+    float voisin8 = Slope(x + 1, y + 1);
+
+    // moyenne des pentes
+    float moyenne = (voisin1 + voisin2 + voisin3 + voisin4 + voisin5 + voisin6 + voisin7 + voisin8) / 8.0f;
+
+	return moyenne;
+}
+
+Image ScalarField::AverageSlopeImage(ScalarField& s) {
+    Image img = Image(s.getRows(), s.getCols());
+    int rows = s.getRows();
+    int cols = s.getCols();
+
+    for (int x = 0; x < rows; x++) {
+        for (int y = 0; y < cols; y++) {
+            float averageSlope = s.AverageSlope(x, y);
+            img(x, y) = Color(averageSlope, averageSlope, averageSlope);
+        }
+    }
+
+    return img;
 }

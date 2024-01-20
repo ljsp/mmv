@@ -19,10 +19,15 @@ public:
 
     float Height(int x, int y) const;
     Vector Gradient(int x, int y) const;
+    float Slope(float x, float y) const;
     Image GradientNorm(ScalarField& s);
-    void Slope(ScalarField& s);
     float Laplacian(int x, int y);
     Image LaplacianImage(ScalarField& s);
+    float AccessibilityBox(float x, float y);
+    float AccessibilityRay(float x, float y);
+    Image AccesibilityImage(ScalarField& s);
+    float AverageSlope(int x, int y);
+    Image AverageSlopeImage(ScalarField& s);
     void Drainage(ScalarField& s);
 
     void ExportImage(const char* filename);
@@ -31,7 +36,8 @@ public:
 
 private:
     std::vector<float> heights;
-    std::vector<float> gradient;
+    std::vector<Vector> gradient;
+    std::vector<float> slope;
 };
 
 #endif //MMV_SCALARFIELD_H
