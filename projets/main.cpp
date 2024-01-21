@@ -36,15 +36,18 @@ public:
         color= White();
 
 #ifdef __linux__
-        Image img = read_image("../data/terrain/terrain_texture.png");
-        m_texture = read_texture(0, "../data/terrain/terrain_texture.png");
-        m_program = read_program("../data/shaders/textures.glsl");
+        Image img = read_image("data/terrain/terrain_texture.png");
+        m_texture = read_texture(0, "data/terrain/terrain_texture.png");
+        m_program = read_program("data/shaders/textures.glsl");
+        m_colorMapping_program = read_program("data/shaders/colorMapping.glsl");
 #else
         Image img = read_image("data/terrain/terrain_texture.png");
         m_texture = read_texture(0, "data/terrain/terrain_texture.png");
         m_program = read_program("data/shaders/textures.glsl");
+        m_colorMapping_program = read_program("data/shaders/colorMapping.glsl");
 #endif
         program_print_errors(m_program);
+        program_print_errors(m_colorMapping_program);
 
         ScalarField field = ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
         m_field = field.ToMesh();
@@ -88,7 +91,7 @@ public:
 
     int render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUseProgram(m_program);
+        
 
         Transform view= camera().view();
         Transform projection= camera().projection();
@@ -98,21 +101,34 @@ public:
 
         Transform mvp = projection * view * model;
 
-        program_uniform(m_program, "mvpMatrix", mvp);
+        
 
         if(textureId == 0) {
+            glUseProgram(m_program);
+            program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_texture);
+            m_field.draw(m_program, true, true, true, false, false);
         } else if(textureId == 1){
+            glUseProgram(m_program);
+            program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_gradient_texture);
+            m_field.draw(m_program, true, true, true, false, false);
         } else if (textureId == 2) {
-            program_use_texture(m_program, "texture0", 0, m_laplacian_texture);
+            glUseProgram(m_colorMapping_program);
+            program_uniform(m_colorMapping_program, "mvpMatrix", mvp);
+            program_use_texture(m_colorMapping_program, "texture0", 0, m_laplacian_texture);
+            m_field.draw(m_colorMapping_program, true, true, true, false, false);
         } else if (textureId == 3) {
+            glUseProgram(m_program);
+            program_uniform(m_program, "mvpMatrix", mvp);
 			program_use_texture(m_program, "texture0", 0, m_accesibility_texture);
+            m_field.draw(m_program, true, true, true, false, false);
         } else if (textureId == 4) {
+            glUseProgram(m_program);
+            program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_averageSlope_texture);
+            m_field.draw(m_program, true, true, true, false, false);
         }
-
-        m_field.draw(m_program, true, true, true, false, false);
 
         imguiWindow();
 
@@ -191,6 +207,7 @@ public:
 
 protected:
     GLuint m_program;
+    GLuint m_colorMapping_program;
     GLuint m_texture;
     GLuint m_gradient_texture;
     GLuint m_laplacian_texture;

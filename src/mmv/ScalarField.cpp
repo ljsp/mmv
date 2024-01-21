@@ -292,8 +292,8 @@ Image ScalarField::AverageSlopeImage(ScalarField& s) {
     int rows = s.getRows();
     int cols = s.getCols();
 
-    for (int x = 0; x < rows; x++) {
-        for (int y = 0; y < cols; y++) {
+    for (int x = 1; x < rows; x++) {
+        for (int y = 1; y < cols; y++) {
             float averageSlope = s.AverageSlope(x, y);
             img(x, y) = Color(averageSlope, averageSlope, averageSlope);
         }
