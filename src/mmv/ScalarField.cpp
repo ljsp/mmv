@@ -4,8 +4,10 @@
 
 #include "ScalarField.h"
 
+#include <float.h>
+
 ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int rows, int cols, float e)
-        : Grid(c1, c2, rows, cols)
+        : Grid(c1, c2, rows, cols), slopeMax(0)
 {
     heights.resize(rows * cols);
     float heightModifier = 15.0f;
@@ -37,11 +39,12 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
             Vector gradient10 = Gradient(x + 1, y);
             Vector gradient11 = Gradient(x - 1, y);
 
-            // Calculer la moyenne des gradients pour le point central du quadrilatère.
+            // Calculer la moyenne des gradients pour le point central du quadrilatï¿½re.
             Vector averageGradient = (gradient00 + gradient01 + gradient10 + gradient11) / 4.0;
 
             // Calculer la pente (magnitude du gradient moyen).
             slope[Index(x, y)] = length(averageGradient);
+            if(slope[Index(x, y)] > slopeMax) slopeMax = slope[Index(x, y)];
 		}
 	}
 }
@@ -200,7 +203,7 @@ struct Ray
 };
 
 float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
-    float radius = 2;
+    float radius = 10;
     float epsilon = 0.1;
     float tmax = radius;
     float zCurrent = Height(xCurrent, yCurrent);
@@ -209,47 +212,59 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
     int numRays = 0;
     int numHits = 0;
 
-    for (float theta = 0.0f; theta <= M_PI / 2.0f; theta += step) {
-        for (float phi = 0.0f; phi <= 2.0f * M_PI; phi += step) {
-            // Définir la direction du rayon dans la demi-sphère.
-            float dx = radius * sin(theta) * cos(phi);
-            float dy = radius * sin(theta) * sin(phi);
-            float dz = radius * cos(theta);
+    float lambda = slopeMax; //hmax
 
-            // Créer le rayon.
-            Ray ray(Point(xCurrent, yCurrent, zCurrent), Vector(dx, dy, dz));
+    for (float theta = 0.0f; theta <= M_PI * 2; theta += step) {
+        for (float phi = 0.0f; phi <= M_PI * 2; phi += step) {
+            // Dï¿½finir la direction du rayon dans la demi-sphï¿½re.
+            float sin_theta = sin(theta);
+            float cos_theta = cos(theta);
+
+            Vector l= Vector(
+                    std::cos(phi) * sin_theta,
+                    cos_theta,
+                    sin_theta * std::sin(phi)
+                );
+
+            // Crï¿½er le rayon.
+            Ray ray(Point(xCurrent, yCurrent, zCurrent), l);
 
             // Initialiser les variables pour suivre l'avancement du rayon.
             float t = 0.0f;
             bool hitTerrain = false;
 
-            // Parcourir le rayon jusqu'à tmax.
-            while (t < tmax) {
+            // Parcourir le rayon jusqu'ï¿½ tmax.
+            while (t < tmax) 
+            {
                 // Obtenir la position actuelle du rayon.
                 Point currentPosition = ray.point(t);
 
-                // Vérifier si le rayon touche le terrain.
-                if (currentPosition.z < Height(currentPosition.x, currentPosition.y)) {
+                float h = Height(currentPosition.x, currentPosition.y);
+
+                // Vï¿½rifier si le rayon touche le terrain.
+                if (currentPosition.z < h || h <= 0.) 
+                {
                     hitTerrain = true;
                     break;
                 }
 
+
                 // Avancer le rayon de epsilon.
-                t += epsilon;
+                t += std::max(abs(h - currentPosition.z) / lambda, epsilon);
             }
 
-            // Incrémenter le nombre total de rayons.
+            // Incrï¿½menter le nombre total de rayons.
             numRays++;
 
-            // Si le rayon a touché le terrain, ne rien faire.
-            // Sinon, incrémente le nombre de hits.
+            // Si le rayon a touchï¿½ le terrain, ne rien faire.
+            // Sinon, incrï¿½mente le nombre de hits.
             if (!hitTerrain) {
                 numHits++;
             }
         }
     }
 
-    // Calculer l'accessibilité comme le ratio des rayons n'ayant pas touché le terrain.
+    // Calculer l'accessibilitï¿½ comme le ratio des rayons n'ayant pas touchï¿½ le terrain.
     float accessibility = static_cast<float>(numHits) / static_cast<float>(numRays);
 
     return accessibility;
