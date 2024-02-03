@@ -11,3 +11,8 @@ int Grid::Index(int i, int j) const {
 bool Grid::Inside(int i, int j) const {
     return (i >= 0 && i < rows) && (j >= 0 && j < cols);
 }
+
+bool Grid::Inside(double u, double v) const
+ {
+    return (u >= 0 && u < rows) && (v >= 0 && v < cols);
+}

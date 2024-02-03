@@ -18,10 +18,12 @@ public:
 
 
     float Height(int x, int y) const;
+    float Height(double x, double y) const;
+    float HeightGrid(int x, int y) const;
     Vector Gradient(int x, int y) const;
     float Slope(float x, float y) const;
     Image GradientNorm(ScalarField& s);
-    float Laplacian(int x, int y);
+    float Laplacian(double x, double y);
     Image LaplacianImage(ScalarField& s);
     float AccessibilityBox(float x, float y);
     float AccessibilityRay(float x, float y);
@@ -40,6 +42,7 @@ private:
     std::vector<float> slope;
     float slopeMax;
     Vector pMin, pMax;
+    Vector boundMin, boundMax;
 };
 
 #endif //MMV_SCALARFIELD_H

@@ -10,7 +10,7 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
         : Grid(c1, c2, rows, cols), slopeMax(0), pMin(0,0,FLT_MAX), pMax(0,0,FLT_MIN)
 {
     heights.resize(rows * cols);
-    float heightModifier = 15.0f;
+    float heightModifier =1.0f;
 
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
@@ -21,6 +21,9 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
             pMax = h > pMax.z ? Vector(x,y,h) : pMax;
         }
     }
+
+    boundMin = Vector(0,0,pMin.z);
+    boundMax = Vector(rows,cols,pMin.z);
 
     // Calculer les gradients.
     gradient.resize(rows * cols);
@@ -52,7 +55,48 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
 	}
 }
 
-float ScalarField::Height(int x, int y) const {
+float ScalarField::Height(int x, int y) const 
+{
+    return Height(double(x), double(y));    
+
+    return heights[Index(x, y)];
+}
+
+float ScalarField::Height(double x, double y) const
+{
+    // Local coordinates
+    double u=(x-double(boundMin.x))/(boundMax.x-boundMin.x);
+    double v=(y-double(boundMin.y))/(boundMax.y-boundMin.y);
+
+    // Cell location within grid
+    int nu=int(u*getCols());
+    int nv=int(v*getRows());
+
+    // Local coordinates within cell
+    u=u-double(nu)*(boundMax.x-boundMin.x)/double(getCols());
+    v=v-double(nv)*(boundMax.y-boundMin.y)/double(getRows());
+
+    if(!Inside(nu+1, nv+1))
+    {
+        return HeightGrid(nu, nv);
+    }
+
+    if (u+v<1)
+    {
+        return (1-u-v)*HeightGrid(nu,nv)
+            +u*HeightGrid(nu+1,nv)
+            +v*HeightGrid(nu,nv+1);
+    }
+    else
+    {
+        return (u+v-1)*HeightGrid(nu+1,nv+1)
+            +(1-v)*HeightGrid(nu+1,nv)
+            +(1-u)*HeightGrid(nu,nv+1);
+    }
+}
+
+float ScalarField::HeightGrid(int x, int y) const
+{
     return heights[Index(x, y)];
 }
 
@@ -80,7 +124,7 @@ Image ScalarField::GradientNorm(ScalarField &s) {
     return img;
 }
 
-float ScalarField::Laplacian(int x, int y) {
+float ScalarField::Laplacian(double x, double y) {
     float up, down, left, right, center;
 
 
@@ -279,7 +323,7 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
                 float h = Height(currentPosition.x, currentPosition.y);
 
                 // V�rifier si le rayon touche le terrain.
-                if (currentPosition.z < h || h <= 0.) 
+                if (currentPosition.z < h || h <= (pMin.z - 5.f)) 
                 {
                     hitTerrain = true;
                     break;

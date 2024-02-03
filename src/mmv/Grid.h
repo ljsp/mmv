@@ -20,6 +20,7 @@ public:
     int getCols() const { return cols; }
 
     bool Inside(int i, int j) const;
+    bool Inside(double u, double v) const;
 };
 
 
