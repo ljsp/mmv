@@ -39,6 +39,7 @@ private:
     std::vector<Vector> gradient;
     std::vector<float> slope;
     float slopeMax;
+    Vector pMin, pMax;
 };
 
 #endif //MMV_SCALARFIELD_H

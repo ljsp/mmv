@@ -7,7 +7,7 @@
 #include <float.h>
 
 ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int rows, int cols, float e)
-        : Grid(c1, c2, rows, cols), slopeMax(0)
+        : Grid(c1, c2, rows, cols), slopeMax(0), pMin(0,0,FLT_MAX), pMax(0,0,FLT_MIN)
 {
     heights.resize(rows * cols);
     float heightModifier = 15.0f;
@@ -15,7 +15,10 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
             Color c = img(x, y);
-            heights[Index(x, y)] = ((c.r + c.g + c.b)/(3*e)) * heightModifier;
+            float h = ((c.r + c.g + c.b)/(3*e)) * heightModifier;
+            heights[Index(x, y)] = h;
+            pMin = h < pMin.z ? Vector(x,y,h) : pMin;
+            pMax = h > pMax.z ? Vector(x,y,h) : pMax;
         }
     }
 
@@ -77,12 +80,44 @@ Image ScalarField::GradientNorm(ScalarField &s) {
 }
 
 float ScalarField::Laplacian(int x, int y) {
-    float center = Height(x, y);
-    float lx = Height(x - 1, y) + Height(x + 1, y);
-    float ly = Height(x, y - 1) + Height(x, y + 1);
+    float up, down, left, right, center;
 
-    float laplacian = (lx + ly - 4 * center);
-    return laplacian;
+
+    center = Height(x, y);
+
+    if(Inside(x - 1, y)) {
+        down = Height(x - 1, y);
+    } else {
+        down = center;
+    }
+
+    if(Inside(x + 1, y)) {
+        up = Height(x + 1, y);
+    } else {
+        up = center;
+    }
+
+    if(Inside(x, y - 1)) {
+        left = Height(x, y - 1);
+    } else {
+        left = center;
+    }
+
+    if(Inside(x, y + 1)) {
+        right = Height(x, y + 1);
+    } else {
+        right = center;
+    }
+
+    float dx = (pMax.x - pMin.x) / (float)getCols();
+    return (right + left + up + down - 4 * center) / (dx * dx);
+
+
+    //float center = Height(x, y);
+    //float lx = Height(x - 1, y) + Height(x + 1, y);
+    //float ly = Height(x, y - 1) + Height(x, y + 1);
+    //float laplacian = (lx + ly - 4 * center);
+    //return laplacian;
 }
 
 Image ScalarField::LaplacianImage(ScalarField &s) {
@@ -90,6 +125,7 @@ Image ScalarField::LaplacianImage(ScalarField &s) {
     int rows = s.getRows();
     int cols = s.getCols();
 
+#pragma omp parallel for collapse(1) private(heights) shared(img)
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
             float laplacian = s.Laplacian(x, y);
@@ -275,6 +311,7 @@ Image ScalarField::AccesibilityImage(ScalarField& s) {
     int rows = s.getRows();
     int cols = s.getCols();
 
+#pragma omp parallel for collapse(1) private(heights) shared(img)
     for (int x = 0; x < rows; x++) {
         for (int y = 0; y < cols; y++) {
             float acces = s.AccessibilityRay(x, y);  
