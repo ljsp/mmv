@@ -357,8 +357,8 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
 
     float lambda = slopeMax; //hmax
 
-    for (float theta = 0.0f; theta <= M_PI * 2; theta += step) {
-        for (float phi = 0.0f; phi <= M_PI * 2; phi += step) {
+    for (float theta = 0.0f; theta <= M_PI; theta += step) {
+        for (float phi = 0.0f; phi <= M_PI; phi += step) {
             // D�finir la direction du rayon dans la demi-sph�re.
             float sin_theta = sin(theta);
             float cos_theta = cos(theta);
