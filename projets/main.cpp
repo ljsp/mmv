@@ -50,7 +50,12 @@ public:
         program_print_errors(m_colorMapping_program);
 
         ScalarField field = ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
+        //ScalarField field = ScalarField(vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
         m_field = field.ToMesh();
+
+        Image height = field.HeightImage();
+        write_image(height, "height.png");
+        m_height_texture = read_texture(0, "height.png");
 
         Image gradient = field.GradientNorm(field);
         Image gradientS = gradient.smooth();
@@ -106,24 +111,29 @@ public:
         if(textureId == 0) {
             glUseProgram(m_program);
             program_uniform(m_program, "mvpMatrix", mvp);
+            program_use_texture(m_program, "texture0", 0, m_height_texture);
+            m_field.draw(m_program, true, true, true, false, false);
+        } else if(textureId == 1) {
+            glUseProgram(m_program);
+            program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_texture);
             m_field.draw(m_program, true, true, true, false, false);
-        } else if(textureId == 1){
+        } else if(textureId == 2){
             glUseProgram(m_program);
             program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_gradient_texture);
             m_field.draw(m_program, true, true, true, false, false);
-        } else if (textureId == 2) {
+        } else if (textureId == 3) {
             glUseProgram(m_colorMapping_program);
             program_uniform(m_colorMapping_program, "mvpMatrix", mvp);
             program_use_texture(m_colorMapping_program, "texture0", 0, m_laplacian_texture);
             m_field.draw(m_colorMapping_program, true, true, true, false, false);
-        } else if (textureId == 3) {
+        } else if (textureId == 4) {
             glUseProgram(m_program);
             program_uniform(m_program, "mvpMatrix", mvp);
 			program_use_texture(m_program, "texture0", 0, m_accesibility_texture);
             m_field.draw(m_program, true, true, true, false, false);
-        } else if (textureId == 4) {
+        } else if (textureId == 5) {
             glUseProgram(m_program);
             program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_averageSlope_texture);
@@ -164,11 +174,12 @@ public:
 
         ImGui::SeparatorText("Textures");
 
-        ImGui::RadioButton("Basic", &textureId, 0); ImGui::SameLine();
-        ImGui::RadioButton("Gradient", &textureId, 1); ImGui::SameLine();
-        ImGui::RadioButton("Laplacian", &textureId, 2); 
-        ImGui::RadioButton("Accesibility", &textureId, 3); ImGui::SameLine();
-        ImGui::RadioButton("Average Slope", &textureId, 4);
+        ImGui::RadioButton("Height", &textureId, 0); ImGui::SameLine();
+        ImGui::RadioButton("Texture", &textureId, 1);
+        ImGui::RadioButton("Gradient", &textureId, 2); ImGui::SameLine();
+        ImGui::RadioButton("Laplacian", &textureId, 3);
+        ImGui::RadioButton("Accesibility", &textureId, 4); ImGui::SameLine();
+        ImGui::RadioButton("Average Slope", &textureId, 5);
 
         if (ImGui::CollapsingHeader("Basic"))
         {
@@ -209,6 +220,7 @@ protected:
     GLuint m_program;
     GLuint m_colorMapping_program;
     GLuint m_texture;
+    GLuint m_height_texture;
     GLuint m_gradient_texture;
     GLuint m_laplacian_texture;
     GLuint m_accesibility_texture;

@@ -2,9 +2,10 @@
 // Created by lucas on 04/12/23.
 //
 
+#include <cfloat>
 #include "ScalarField.h"
-
 #include <float.h>
+
 
 ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int rows, int cols, float e)
         : Grid(c1, c2, rows, cols), slopeMax(0), pMin(0,0,FLT_MAX), pMax(0,0,FLT_MIN)
@@ -52,6 +53,50 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
 	}
 }
 
+ScalarField::ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, float e)
+        : Grid(c1, c2, rows, cols), slopeMax(0)
+{
+    heights.resize(rows * cols);
+    float heightModifier = 15.0f;
+
+    for(int x = 0; x < rows; x++){
+        for(int y = 0; y < cols; y++){
+            float sinus = (sin(2 * M_PI * x / rows) + 1) / 2;
+            float cosinus = (cos(2 * M_PI * y / cols) + 1) / 2;
+            heights[Index(x, y)] = (sinus + cosinus) / 2 * heightModifier;
+        }
+    }
+
+    // Calculer les gradients.
+    gradient.resize(rows * cols);
+    for (int x = 1; x < rows; x++) {
+        for (int y = 1; y < cols; y++) {
+            double gx = (Height(x + 1, y) - Height(x - 1, y)) / 2.0f;
+            double gy = (Height(x, y + 1) - Height(x, y - 1)) / 2.0f;
+            double gz = 0.0f;
+            gradient[Index(x, y)] = Vector(gx, gy, gz);
+        }
+    }
+
+    // Calculer les pentes.
+    slope.resize(rows * cols);
+    for (int x = 1; x < rows; x++) {
+        for (int y = 1; y < cols; y++) {
+            Vector gradient00 = Gradient(x, y - 1);
+            Vector gradient01 = Gradient(x, y + 1);
+            Vector gradient10 = Gradient(x + 1, y);
+            Vector gradient11 = Gradient(x - 1, y);
+
+            // Calculer la moyenne des gradients pour le point central du quadrilat�re.
+            Vector averageGradient = (gradient00 + gradient01 + gradient10 + gradient11) / 4.0;
+
+            // Calculer la pente (magnitude du gradient moyen).
+            slope[Index(x, y)] = length(averageGradient);
+            if(slope[Index(x, y)] > slopeMax) slopeMax = slope[Index(x, y)];
+        }
+    }
+}
+
 float ScalarField::Height(int x, int y) const {
     return heights[Index(x, y)];
 }
@@ -62,6 +107,21 @@ Vector ScalarField::Gradient(int x, int y) const {
 
 float ScalarField::Slope(float x, float y) const{
     return slope[Index(x, y)];
+}
+
+Image ScalarField::HeightImage() const {
+    Image img = Image(getRows(), getCols());
+    int rows = getRows();
+    int cols = getCols();
+
+#pragma omp parallel for collapse(1) private(heights) shared(img)
+    for(int x = 0; x < rows; x++){
+        for(int y = 0; y < cols; y++){
+            float color = Height(x, y) / 15.0f;
+            img(x, y) = Color(color, color, color);
+        }
+    }
+    return img;
 }
 
 Image ScalarField::GradientNorm(ScalarField &s) {
@@ -134,12 +194,8 @@ Image ScalarField::LaplacianImage(ScalarField &s) {
             img(x, y) = Color(color,color,color);
         }
     }
-
     return img;
 }
-
-
-
 
 Mesh ScalarField::ToMesh() const {
     Mesh mesh = Mesh(GL_TRIANGLES);
@@ -321,6 +377,10 @@ Image ScalarField::AccesibilityImage(ScalarField& s) {
     }
 
     return img;
+}
+
+void ScalarField::Drainage(ScalarField &s) {
+
 }
 
 float ScalarField::AverageSlope(int x, int y) {
