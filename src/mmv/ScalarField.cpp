@@ -69,6 +69,7 @@ Image ScalarField::GradientNorm(ScalarField &s) {
     int rows = s.getRows();
     int cols = s.getCols();
 
+#pragma omp parallel for collapse(1) private(heights) shared(img)
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
             Vector v = s.Gradient(x, y);
@@ -344,6 +345,7 @@ Image ScalarField::AverageSlopeImage(ScalarField& s) {
     int rows = s.getRows();
     int cols = s.getCols();
 
+#pragma omp parallel for collapse(1) private(heights) shared(img)
     for (int x = 1; x < rows; x++) {
         for (int y = 1; y < cols; y++) {
             float averageSlope = s.AverageSlope(x, y);
