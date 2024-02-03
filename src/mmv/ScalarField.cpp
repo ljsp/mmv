@@ -158,7 +158,7 @@ Image ScalarField::HeightImage() const {
     int rows = getRows();
     int cols = getCols();
 
-#pragma omp parallel for collapse(1) private(heights) shared(img)
+#pragma omp parallel for collapse(1) shared(img)
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
             float color = Height(x, y) / 15.0f;
