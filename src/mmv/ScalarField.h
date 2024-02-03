@@ -13,11 +13,13 @@
 
 class ScalarField : public Grid {
 public:
+    ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, float e);
     ScalarField(const Image & img, const vec2& c1, const vec2& c2, int rows, int cols, float e);
     ~ScalarField();
 
 
     float Height(int x, int y) const;
+    Image HeightImage() const;
     float Height(double x, double y) const;
     float HeightGrid(int x, int y) const;
     Vector Gradient(int x, int y) const;
@@ -32,8 +34,6 @@ public:
     Image AverageSlopeImage(ScalarField& s);
     void Drainage(ScalarField& s);
 
-    void ExportImage(const char* filename);
-    void ExportMesh(const char* filename);
     Mesh ToMesh() const;
 
 private:
