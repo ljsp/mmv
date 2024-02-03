@@ -23,6 +23,9 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
         }
     }
 
+    boundMin = Vector(0,0,pMin.z);
+    boundMax = Vector(rows,cols,pMin.z);
+
     // Calculer les gradients.
     gradient.resize(rows * cols);
     for (int x = 1; x < rows; x++) {
@@ -54,7 +57,7 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
 }
 
 ScalarField::ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, float e)
-        : Grid(c1, c2, rows, cols), slopeMax(0)
+        : Grid(c1, c2, rows, cols), slopeMax(0), pMin(0,0,FLT_MAX), pMax(0,0,FLT_MIN)
 {
     heights.resize(rows * cols);
     float heightModifier = 15.0f;
@@ -63,7 +66,10 @@ ScalarField::ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, flo
         for(int y = 0; y < cols; y++){
             float sinus = (sin(2 * M_PI * x / rows) + 1) / 2;
             float cosinus = (cos(2 * M_PI * y / cols) + 1) / 2;
-            heights[Index(x, y)] = (sinus + cosinus) / 2 * heightModifier;
+            float h =(sinus + cosinus) / 2 * heightModifier;
+            heights[Index(x, y)] = h;
+            pMin = h < pMin.z ? Vector(x,y,h) : pMin;
+            pMax = h > pMax.z ? Vector(x,y,h) : pMax;
         }
     }
 
