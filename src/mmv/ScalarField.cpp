@@ -11,7 +11,7 @@ ScalarField::ScalarField(const Image & img, const vec2& c1, const vec2& c2, int 
         : Grid(c1, c2, rows, cols), slopeMax(0), pMin(0,0,FLT_MAX), pMax(0,0,FLT_MIN)
 {
     heights.resize(rows * cols);
-    float heightModifier =1.0f;
+    float heightModifier =20.0f;
 
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
@@ -115,6 +115,8 @@ float ScalarField::Height(int x, int y) const
 
 float ScalarField::Height(double x, double y) const
 {
+    return heights[Index(x, y)];
+
     // Local coordinates
     double u=(x-double(boundMin.x))/(boundMax.x-boundMin.x);
     double v=(y-double(boundMin.y))/(boundMax.y-boundMin.y);
