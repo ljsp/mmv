@@ -106,9 +106,9 @@ ScalarField::ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, flo
     }
 }
 
-float ScalarField::Height(int x, int y) const 
+float ScalarField::Height(int x, int y) const
 {
-    return Height(double(x), double(y));    
+    return Height(double(x), double(y));
 
     return heights[Index(x, y)];
 }
@@ -387,7 +387,7 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
                 float h = Height(currentPosition.x, currentPosition.y);
 
                 // V�rifier si le rayon touche le terrain.
-                if (currentPosition.z < h || h <= (pMin.z - 5.f)) 
+                if (currentPosition.z < h || h <= (pMin.z - 5.f))
                 {
                     hitTerrain = true;
                     break;

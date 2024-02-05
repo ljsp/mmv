@@ -149,10 +149,22 @@ struct vec2
     //! constructeur par defaut.
     vec2( ) : x(0), y(0) {}
     explicit vec2( const float _x, const float _y ) : x(_x), y(_y) {}
-    
-    //! renvoie la ieme composante du vecteur.
+
+    vec2(int i) : x(i), y(i) {}
+
+//! renvoie la ieme composante du vecteur.
     float operator() ( const unsigned int i ) const { return (&x)[i]; }
     float& operator() ( const unsigned int i ) { return (&x)[i]; }
+    bool operator==(const vec2& b) const { return x == b.x && y == b.y; }
+    bool operator!=(const vec2& b) const { return x != b.x || y != b.y; }
+    void operator+=(const vec2& b) { x += b.x; y += b.y; }
+    void operator-=(const vec2& b) { x -= b.x; y -= b.y; }
+    void operator*=(const float k) { x *= k; y *= k; }
+    void operator/=(const float k) { x /= k; y /= k; }
+    vec2 operator+(const vec2& b) const { return vec2(x + b.x, y + b.y); }
+    vec2 operator-(const vec2& b) const { return vec2(x - b.x, y - b.y); }
+    vec2 operator*(const float k) const { return vec2(x * k, y * k); }
+    vec2 operator/(const float k) const { return vec2(x / k, y / k); }
 
     float x, y;
 };
