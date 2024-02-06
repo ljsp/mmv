@@ -17,6 +17,8 @@
 #include "HeightField.h"
 #include "ScalarField.h"
 
+#include "Astar.h"
+
 class TP : public AppCamera
 {
 public:
@@ -40,12 +42,7 @@ public:
         m_texture = read_texture(0, "data/terrain/errosion_debug.png");
         m_program = read_program("data/shaders/textures.glsl");
         m_colorMapping_program = read_program("data/shaders/colorMapping.glsl");
-#else
-        Image img = read_image("data/terrain/terrain_texture.png");
-        m_texture = read_texture(0, "data/terrain/terrain_texture.png");
-        m_program = read_program("data/shaders/textures.glsl");
-        m_colorMapping_program = read_program("data/shaders/colorMapping.glsl");
-#endif
+
         program_print_errors(m_program);
         program_print_errors(m_colorMapping_program);
 
@@ -77,6 +74,16 @@ public:
         write_image(averageSlope, "averageSlope.png");
         m_averageSlope_texture = read_texture(0, "averageSlope.png");
 
+        // Roads (Astar)
+        int mapWidth = field.getCols();
+        int mapHeight = field.getRows();
+        vec2 start(177, 157), mid(99, 12), mid2(33, 127), end( 76, 49 );
+        map m(mapWidth, mapHeight);
+        aStar as;
+        Image roads(mapWidth, mapHeight, Black());
+        as.makeRoad(start, mid, m, roads);
+        as.makeRoad(mid2, end, m, roads);
+        m_roads_texture = read_texture(0, "roads.png");
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);  // couleur par defaut de la fenetre
         glClearDepth(1.f);                    // profondeur par defaut
@@ -137,6 +144,11 @@ public:
             glUseProgram(m_program);
             program_uniform(m_program, "mvpMatrix", mvp);
             program_use_texture(m_program, "texture0", 0, m_averageSlope_texture);
+            m_field.draw(m_program, true, true, true, false, false);
+        } else if (textureId == 6) {
+            glUseProgram(m_program);
+            program_uniform(m_program, "mvpMatrix", mvp);
+            program_use_texture(m_program, "texture0", 0, m_roads_texture);
             m_field.draw(m_program, true, true, true, false, false);
         }
 
@@ -226,6 +238,7 @@ public:
         ImGui::RadioButton("Laplacian", &textureId, 3);
         ImGui::RadioButton("Accesibility", &textureId, 4); ImGui::SameLine();
         ImGui::RadioButton("Average Slope", &textureId, 5);
+        ImGui::RadioButton("Roads", &textureId, 6);
 
         if (ImGui::CollapsingHeader("Basic"))
         {
@@ -257,6 +270,12 @@ public:
             ImGui::Image((void*)(intptr_t)m_averageSlope_texture, texture_size);
         }
 
+        if (ImGui::CollapsingHeader("Roads"))
+        {
+            ImVec2 texture_size(300, 300);
+            ImGui::Image((void*)(intptr_t)m_roads_texture, texture_size);
+        }
+
         ImGui::End();
         ImGui::Render();
         ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
@@ -271,6 +290,7 @@ protected:
     GLuint m_laplacian_texture;
     GLuint m_accesibility_texture;
     GLuint m_averageSlope_texture;
+    GLuint m_roads_texture;
     Mesh m_field;
 
     // Imgui variables
@@ -282,6 +302,7 @@ protected:
     
     ScalarField field;
 };
+
 
 int main( int argc, char **argv )
 {
