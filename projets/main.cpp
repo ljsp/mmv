@@ -36,8 +36,8 @@ public:
         color= White();
 
 #ifdef __linux__
-        Image img = read_image("data/terrain/terrain_texture.png");
-        m_texture = read_texture(0, "data/terrain/terrain_texture.png");
+        Image img = read_image("data/terrain/errosion_debug.png");
+        m_texture = read_texture(0, "data/terrain/errosion_debug.png");
         m_program = read_program("data/shaders/textures.glsl");
         m_colorMapping_program = read_program("data/shaders/colorMapping.glsl");
 #else
@@ -49,8 +49,8 @@ public:
         program_print_errors(m_program);
         program_print_errors(m_colorMapping_program);
 
-        ScalarField field = ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
-        //ScalarField field = ScalarField(vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
+        field = ScalarField(img, vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
+        //field = ScalarField(vec2(-1, -1), vec2(1, 1), img.height(), img.width(), 1);
         m_field = field.ToMesh();
 
         Image height = field.HeightImage();
@@ -172,6 +172,52 @@ public:
         ImGui::SeparatorText("Model Scale");
         ImGui::SliderFloat("scale", &objetScale, 0.0f, 0.05f, "%.3f");
 
+        ImGui::SeparatorText("MidelIneration");
+        if(ImGui::Button("errode"))
+        {
+            glDeleteTextures(1,&m_program);
+            glDeleteTextures(1,&m_colorMapping_program);
+            glDeleteTextures(1,&m_texture);
+            glDeleteTextures(1,&m_height_texture);
+            glDeleteTextures(1,&m_gradient_texture);
+            glDeleteTextures(1,&m_laplacian_texture);
+            glDeleteTextures(1,&m_accesibility_texture);
+            glDeleteTextures(1,&m_averageSlope_texture);
+            m_field.release();
+
+            for (size_t i = 0; i < 5000; i++)
+            {
+                field.ApplyThermicalErosion();
+            }
+
+            m_field = field.ToMesh();
+
+            Image height = field.HeightImage();
+            write_image(height, "height.png");
+            m_height_texture = read_texture(0, "height.png");
+
+            Image gradient = field.GradientNorm(field);
+            Image gradientS = gradient.smooth();
+            Image gradientB = gradient.Blur();
+            write_image(gradient, "gradient.png");
+            write_image(gradientS, "gradientS.png");
+            write_image(gradientB, "gradientB.png");
+            m_gradient_texture = read_texture(0, "gradientS.png");
+
+            Image laplacian = field.LaplacianImage(field);
+            write_image(laplacian, "laplacian.png");
+            m_laplacian_texture = read_texture(0, "laplacian.png");
+
+            Image accesibility = field.AccesibilityImage(field);
+            write_image(accesibility, "accesibility.png");
+            m_accesibility_texture = read_texture(0, "accesibility.png");
+
+            Image averageSlope = field.AverageSlopeImage(field);
+            write_image(averageSlope, "averageSlope.png");
+            m_averageSlope_texture = read_texture(0, "averageSlope.png");
+        }
+        
+
         ImGui::SeparatorText("Textures");
 
         ImGui::RadioButton("Height", &textureId, 0); ImGui::SameLine();
@@ -233,6 +279,8 @@ protected:
     float objetScale;
     int textureId;
     Color color;
+    
+    ScalarField field;
 };
 
 int main( int argc, char **argv )

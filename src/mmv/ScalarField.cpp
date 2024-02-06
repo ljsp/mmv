@@ -60,7 +60,7 @@ ScalarField::ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, flo
         : Grid(c1, c2, rows, cols), slopeMax(0), pMin(0,0,FLT_MAX), pMax(0,0,FLT_MIN)
 {
     heights.resize(rows * cols);
-    float heightModifier = 15.0f;
+    float heightModifier = 50.0f;
 
     for(int x = 0; x < rows; x++){
         for(int y = 0; y < cols; y++){
@@ -298,7 +298,39 @@ Mesh ScalarField::ToMesh() const {
     return mesh;
 }
 
-ScalarField::~ScalarField() {
+void ScalarField::SetHeight(int x, int y, float newHeight)
+{
+    //update height
+    heights[Index(x, y)] = newHeight;
+
+    //update bounds
+    pMin = newHeight < pMin.z ? Vector(x,y,newHeight) : pMin;
+    pMax = newHeight > pMax.z ? Vector(x,y,newHeight) : pMax;
+    boundMin = Vector(0,0,pMin.z);
+    boundMax = Vector(getRows(),getCols(),pMin.z);
+
+    //update gradiant
+    double gx = (Height(x + 1, y) - Height(x - 1, y)) / 2.0f;
+    double gy = (Height(x, y + 1) - Height(x, y - 1)) / 2.0f;
+    double gz = 0.0f;
+    gradient[Index(x, y)] = Vector(gx, gy, gz);
+
+    //update slope
+    Vector gradient00 = Gradient(x, y - 1);
+    Vector gradient01 = Gradient(x, y + 1);
+    Vector gradient10 = Gradient(x + 1, y);
+    Vector gradient11 = Gradient(x - 1, y);
+
+    // Calculer la moyenne des gradients pour le point central du quadrilat�re.
+    Vector averageGradient = (gradient00 + gradient01 + gradient10 + gradient11) / 4.0;
+
+    // Calculer la pente (magnitude du gradient moyen).
+    slope[Index(x, y)] = length(averageGradient);
+    if(slope[Index(x, y)] > slopeMax) slopeMax = slope[Index(x, y)];
+}
+
+ScalarField::~ScalarField() 
+{
 
 }
 
@@ -433,6 +465,58 @@ Image ScalarField::AccesibilityImage(ScalarField& s) {
 
 void ScalarField::Drainage(ScalarField &s) {
 
+}
+
+void ScalarField::ApplyThermicalErosion()
+{
+    const float angle = M_PI / 4;
+    const float k = 0.0005;
+
+
+    float tanAngle = tan(angle);
+    //float spaceStep = (pMax.x - pMin.x) / float(getRows());
+  
+    for (int x = 0; x < getRows(); x++)
+    {
+        for (int y = 0; y < getCols(); y++)
+        {
+            float h = Height(x, y);
+    
+            float maxSlope = 0;
+            int km, lm;
+    
+            for (int x2 = -1; x2 <= 1; x2++)
+            {
+                for (int y2 = -1; y2 <= 1; y2++)
+                {
+                    if(x2 == 0 && y2 == 0) 
+                        continue;
+                    if(x + x2 < 0 || x + x2 >= getRows() || y + y2 < 0 || y + y2 >= getCols()) 
+                        continue;
+
+                    float h2 = Height(x2, y2);
+    
+                    float slope = (h - h2);
+                    //float slope = (h - h2) / spaceStep;
+
+                    if(slope > tanAngle && slope > maxSlope)
+                    {
+                        maxSlope = slope;
+                        km = x2;
+                        lm = y2;
+                    }
+                }
+            }
+    
+            if(maxSlope <= 0.0001) 
+                continue;
+        
+            //Apply errosion
+            float delta = maxSlope - tanAngle;
+            SetHeight(x,        y,          Height(x,      y     ) - (k * delta ));//- Laplacian(x, y) * k));
+            SetHeight(x + km,   y + lm,     Height(x + km, y + lm) +  k * delta);
+        }
+    }
 }
 
 float ScalarField::AverageSlope(int x, int y) {

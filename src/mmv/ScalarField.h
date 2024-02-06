@@ -13,6 +13,7 @@
 
 class ScalarField : public Grid {
 public:
+    ScalarField() : Grid(vec2(0,0),vec2(0,0),0,0) {}
     ScalarField(const vec2& c1, const vec2& c2, int rows, int cols, float e);
     ScalarField(const Image & img, const vec2& c1, const vec2& c2, int rows, int cols, float e);
     ~ScalarField();
@@ -34,9 +35,13 @@ public:
     Image AverageSlopeImage(ScalarField& s);
     void Drainage(ScalarField& s);
 
+    void ApplyThermicalErosion();
+
     Mesh ToMesh() const;
 
 private:
+    void SetHeight(int x, int y, float newHeight);
+
     std::vector<float> heights;
     std::vector<Vector> gradient;
     std::vector<float> slope;
