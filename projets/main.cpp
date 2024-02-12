@@ -37,9 +37,8 @@ public:
         textureId = 0;
         color= White();
 
-#ifdef __linux__
-        Image img = read_image("data/terrain/errosion_debug.png");
-        m_texture = read_texture(0, "data/terrain/errosion_debug.png");
+        Image img = read_image("data/terrain/hiresTest.png");
+        m_texture = read_texture(0, "data/terrain/hiresTest.png");
         m_program = read_program("data/shaders/textures.glsl");
         m_colorMapping_program = read_program("data/shaders/colorMapping.glsl");
 
@@ -197,7 +196,7 @@ public:
             glDeleteTextures(1,&m_averageSlope_texture);
             m_field.release();
 
-            for (size_t i = 0; i < 5000; i++)
+            for (size_t i = 0; i < 25000; i++)
             {
                 field.ApplyThermicalErosion();
             }

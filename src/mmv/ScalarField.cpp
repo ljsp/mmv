@@ -391,8 +391,9 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
 
     float lambda = slopeMax; //hmax
 
-    for (float theta = 0.0f; theta <= M_PI; theta += step) {
-        for (float phi = 0.0f; phi <= M_PI; phi += step) {
+    for (float theta = 0.0f; theta <= M_PI; theta += step) 
+        for (float phi = 0.0f; phi <= M_PI; phi += step) 
+        {
             // D�finir la direction du rayon dans la demi-sph�re.
             float sin_theta = sin(theta);
             float cos_theta = cos(theta);
@@ -415,6 +416,8 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
             {
                 // Obtenir la position actuelle du rayon.
                 Point currentPosition = ray.point(t);
+                if(currentPosition.x < 0 || currentPosition.x >= getRows() || currentPosition.y < 0 || currentPosition.y >= getCols()) 
+                    break;
 
                 float h = Height(currentPosition.x, currentPosition.y);
 
@@ -439,7 +442,6 @@ float ScalarField::AccessibilityRay(float xCurrent, float yCurrent) {
                 numHits++;
             }
         }
-    }
 
     // Calculer l'accessibilit� comme le ratio des rayons n'ayant pas touch� le terrain.
     float accessibility = static_cast<float>(numHits) / static_cast<float>(numRays);
@@ -494,7 +496,7 @@ void ScalarField::ApplyThermicalErosion()
                     if(x + x2 < 0 || x + x2 >= getRows() || y + y2 < 0 || y + y2 >= getCols()) 
                         continue;
 
-                    float h2 = Height(x2, y2);
+                    float h2 = Height(x + x2, y + y2);
     
                     float slope = (h - h2);
                     //float slope = (h - h2) / spaceStep;
